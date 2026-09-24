@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Atlas Indígena do Paraná</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Open Sans', sans-serif; overflow: hidden; }
+        #container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+        
+        /* Sidebar Base */
+        .sidebar {
+            background: #fdfaf6;
+            z-index: 1001;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Sidebar Esquerda */
+        #sidebar { width: 22%; min-width: 280px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #sidebar.collapsed { margin-left: -22%; min-width: 0; }
+        .lista-sugestoes {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    background: #fff;
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    display: none; /* Escondida por padrão */
+  }
+
+  .lista-sugestoes li {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .lista-sugestoes li:hover {
+    background-color: #f5f5f5;
+  }
+
+        /* Sidebar Direita */
+        #sidebar-right { width: 180px; border-left: 1px solid #e0dcd5; padding: 15px; }
+        #sidebar-right.collapsed { margin-right: -180px; padding: 0; border: none; }
+
+        /* Botões de Toggle */
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            width: 30px;
+            height: 30px;
+            background: #8b4513;
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #toggle-left { right: -40px; } /* Fica "pendurado" para fora */
+        #toggle-right { left: -40px; }
+        
+        .leaflet-top.leaflet-left {
+             margin-top: 55px !important; /* Ajuste esse valor conforme necessário */
+        }
+        /* Conteúdo Interno */
+        .sidebar-header { flex-shrink: 0; padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #e0dcd5; }
+        .sidebar-content { flex-grow: 1; overflow-y: auto; padding: 15px; min-width: 250px; }
+
+        /* Mapa */
+        #map { flex-grow: 1; height: 100%; z-index: 1; }
+        
+        /* Legenda - Agora reage à sidebar direita */
+        .legend {
+            position: absolute; 
+            bottom: 30px; 
+            right: 20px; /* Distância fixa da borda direita da tela */
+            background: white; 
+            padding: 10px; 
+            border-radius: 5px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000; 
+            font-size: 11px;
+            transition: transform 0.4s ease; /* Move junto com a sidebar */
+        }
+        /* Quando a sidebar direita está aberta, empurramos a legenda para a esquerda */
+        body:not(.right-collapsed) .legend {
+            transform: translateX(-190px);
+        }
+
+        /* Estilos de busca e textos */
+        .search-container { margin-bottom: 20px; position: relative; }
+        #search-input { width: 100%; padding: 10px; border: 1px solid #d2691e; border-radius: 20px; box-sizing: border-box; }
+        #sidebar h1 { color: #8b4513; font-family: 'Cinzel', serif; font-size: 1.2em; }
+        .layer-item { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.85em; }
+        .info-box h2 { color: #d2691e; margin: 0 0 10px 0; font-family: 'Cinzel', serif; font-size: 1.1em; }
+        .data-row { margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; font-size: 0.9em;}
+        .data-label { font-weight: bold; color: #8b4513; }
+        .btn-voltar-sidebar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid #d2691e; margin-right: 12px; display: block;}
+        .btn-voltar-sidebar img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body class=""> <div id="container">
+    <div id="sidebar" class="sidebar">
+        <button class="toggle-btn" id="toggle-left">◀</button>
+        <div class="sidebar-header">
+            <a href="index.html" class="btn-voltar-sidebar">
+                <img src="atlas_pr_cortada.jpg" alt="Voltar">
+            </a>
+            <strong style="font-family: 'Cinzel'; color: #d2691e;">Portal</strong>
+        </div>
+        <div class="sidebar-content">
+            <h1>Atlas Indígena</h1>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Buscar terra indígena...">
+            </div>
+            <div id="info-dinamica">
+                <p style="color: #777; font-style: italic; font-size: 0.9em;">Selecione uma área no mapa.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    
+    <div class="legend">
+        <div style="display: flex; align-items: center;">
+            <div style="width: 12px; height: 12px; background: #8b4513; opacity: 0.7; margin-right: 6px;"></div>
+            <span>Terra Indígena</span>
+        </div>
+    </div>
+
+    <div id="sidebar-right" class="sidebar">
+        <button class="toggle-btn" id="toggle-right">▶</button>
+        <h2 style="font-family: 'Cinzel'; font-size: 1em; color: #8b4513;">Camadas</h2>
+        <div class="layer-item">
+            <input type="checkbox" id="check-terras" checked>
+            <label for="check-terras">Terras Indígenas</label>
+        </div>
+        <div class="layer-item">
+             <input type="checkbox" id="check-limite" checked>
+            <label for="check-limite">Limite Estadual</label>
+        </div>
+        <div class="layer-item">
+              <input type="checkbox" id="check-densidade">
+              <label for="check-densidade">Densidade Populacional</label>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Coloque isso logo após o script do Leaflet -->
+<!-- Estilos extras que o QGIS gera (opcional, mas ajuda no visual) -->
+<link rel="stylesheet" href="Camadas/Densidade/css/qgis2web.css">
+
+<!-- Scripts de suporte (essenciais para o estilo funcionar) -->
+<script src="Camadas/Densidade/js/rbush.min.js"></script>
+<script src="Camadas/Densidade/js/labelgun.min.js"></script>
+<script src="Camadas/Densidade/js/labels.js"></script>
+<script src="Camadas/Densidade/js/Autolinker.min.js"></script>
+
+<!-- Dados e Estilos (A ordem importa: Dados primeiro, Estilo depois) -->
+<script src="Camadas/Densidade/data/MAPA_IND_GRADUADO1_0.js"></script>
+<script src="Camadas/Densidade/js/PRESENA_0_style.js"></script>    
+
+<script>
+    const map = L.map('map').setView([-24.6, -51.5], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // --- LÓGICA DE RECOLHIMENTO (COLLAPSE) ---
+    const btnLeft = document.getElementById('toggle-left');
+    const btnRight = document.getElementById('toggle-right');
+    const sideLeft = document.getElementById('sidebar');
+    const sideRight = document.getElementById('sidebar-right');
+
+    btnLeft.addEventListener('click', () => {
+        sideLeft.classList.toggle('collapsed');
+        btnLeft.innerText = sideLeft.classList.contains('collapsed') ? '▶' : '◀';
+        setTimeout(() => { map.invalidateSize(); }, 400); // Ajusta o mapa após a animação
+    });
+
+    btnRight.addEventListener('click', () => {
+        sideRight.classList.toggle('collapsed');
+        document.body.classList.toggle('right-collapsed'); // Para a legenda seguir o movimento
+        btnRight.innerText = sideRight.classList.contains('collapsed') ? '◀' : '▶';
+        setTimeout(() => { map.invalidateSize(); }, 400);
+    });
+
+    // --- RESTANTE DAS SUAS FUNÇÕES ORIGINAIS ---
+    let camadaTerras;
+    let limiteParana;
+
+    function estilo(feature) {
+        return { fillColor: "#8b4513", weight: 2, opacity: 1, color: 'white', fillOpacity: 0.6 };
+    }
+
+    function atualizarSidebar(props) {
+        const painel = document.getElementById('info-dinamica');
+        if (!props) return;
+        // Se a sidebar estiver fechada ao clicar, podemos abri-la automaticamente:
+        if(sideLeft.classList.contains('collapsed')) btnLeft.click();
+
+        painel.innerHTML = `
+            <div class="info-box">
+                <h2>${props.terrai_nom || 'Terra Indígena'}</h2>
+                <div class="data-row"><div class="data-label">Município:</div><div>${props.municipio_ || 'Não informado'}</div></div>
+                <div class="data-row"><div class="data-label">Etnia:</div><div>${props.etnia_nome || 'Não informada'}</div></div>
+                <div class="data-row"><div class="data-label">Situação:</div><div>${props.situacao || 'Regularizada'}</div></div>
+            </div>
+        `;
+    }
+
+    fetch('dados.geojson')
+        .then(res => res.json())
+        .then(data => {
+            camadaTerras = L.geoJSON(data, {
+                style: estilo,
+                onEachFeature: function (feature, layer) {
+                    layer.on('click', function (e) {
+                        atualizarSidebar(feature.properties);
+                        map.fitBounds(e.target.getBounds());
+                    });
+                    layer.on('mouseover', function () { this.setStyle({ fillOpacity: 0.8, fillColor: '#d2691e' }); });
+                    layer.on('mouseout', function () { this.setStyle(estilo()); });
+                }
+            }).addTo(map);
+        });
+
+    fetch('PR_LIMITE.geojson')
+        .then(res => res.json())
+        .then(data => {
+            limiteParana = L.geoJSON(data, {
+                style: { color: "#444", weight: 1.5, fillOpacity: 0, interactive: false }
+            }).addTo(map);
+        });
+
+    // Pesquisa
+    document.getElementById('search-input').addEventListener('input', function(e) {
+        const valorBusca = e.target.value.toLowerCase();
+        if (!camadaTerras || valorBusca.length < 3) return;
+
+        camadaTerras.eachLayer(function(layer) {
+            const nomeTerra = (layer.feature.properties.terrai_nom || "").toLowerCase();
+            if (nomeTerra.includes(valorBusca)) {
+                layer.setStyle({ fillColor: 'yellow', fillOpacity: 0.9 });
+                map.fitBounds(layer.getBounds());
+                atualizarSidebar(layer.feature.properties);
+            } else {
+                layer.setStyle(estilo());
+            }
+        });
+        
+    });
+
+    // Checkboxes
+    document.getElementById('check-terras').addEventListener('change', function() {
+        if (this.checked) map.addLayer(camadaTerras); 
+        else map.removeLayer(camadaTerras); 
+    });
+    document.getElementById('check-limite').addEventListener('change', function() {
+        if (this.checked) map.addLayer(limiteParana);
+        else map.removeLayer(limiteParana);
+    });
+    
+// --- LÓGICA DE DENSIDADE (ESTILO MANUAL) ---
+let camadaDensidadeQGIS;
+
+// Função para definir a cor baseada na densidade (Exemplo de 5 classes)
+function getColor(d) {
+    return d > 2000 ? '#800000' :
+           d > 1300  ? '#FF0000' :
+           d > 500  ? '#FF8C00' :
+           d > 0  ? '#FFA07A' :
+           d =      '#808080';
+}
+
+function estiloDensidade(feature) {
+    return {
+        fillColor: getColor(feature.properties['indigenas']), // Certifique-se que o nome da coluna está correto
+        weight: 1,
+        opacity: 1,
+        color: 'white',
+        fillOpacity: 0.9
+    };
+}
+
+document.getElementById('check-densidade').addEventListener('change', function() {
+    if (this.checked) {
+        if (typeof json_MAPA_IND_GRADUADO1_0 !== 'undefined') {
+            if (camadaDensidadeQGIS) map.removeLayer(camadaDensidadeQGIS);
+
+            camadaDensidadeQGIS = L.geoJson(json_MAPA_IND_GRADUADO1_0, {
+                style: estiloDensidade, // Usando a função que criamos acima
+                onEachFeature: function(feature, layer) {
+                    let v = feature.properties['indigenas'] || 0;
+                    layer.bindPopup("<strong>População Indígena:</strong> " + v);
+                }
+            }).addTo(map);
+
+            map.fitBounds(camadaDensidadeQGIS.getBounds());
+        } else {
+            alert("Erro: O arquivo de dados não foi carregado corretamente.");
+            this.checked = false;
+        }
+    } else {
+        if (camadaDensidadeQGIS) map.removeLayer(camadaDensidadeQGIS);
+    }
+});
+</script>
+
+</body>
+</html>

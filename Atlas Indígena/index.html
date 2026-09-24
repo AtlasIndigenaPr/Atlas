@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Atlas Indígena PR | Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&family=Eczar:wght@800&family=Ruslan+Display&display=swap" rel="stylesheet">  
+    
+    <style>
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            margin: 0; padding: 0; 
+            font-family: 'Open Sans', sans-serif; 
+            color: #333; line-height: 1.6;
+        }
+
+        /* --- MENU FIXO --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgb(0, 160, 0);
+            padding: 12px 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.7); /* Cor normal (um pouco apagada) */
+            text-decoration: none;
+            margin: 0 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: 0.3s;
+            padding-bottom: 5px;
+            border-bottom: 2px solid transparent; /* Borda invisível para não pular */
+        }
+
+        nav a:hover { color: white; }
+
+        /* --- A CLASSE MÁGICA "ATIVO" --- */
+        /* O Javascript vai adicionar essa classe no link certo */
+        nav a.ativo {
+            color: #ffd700; /* Dourado */
+            border-bottom: 2px solid #ffd700;
+            opacity: 1;
+        }
+
+        /* Botão especial do Mapa (não muda com a rolagem) */
+        .btn-nav-mapa {
+            background: white; 
+            color: #f87f05f0 !important; /* Força a cor marrom */
+            padding: 5px 15px; 
+            border-radius: 15px;
+            opacity: 1 !important;
+            border-bottom: none !important;
+        }
+        .btn-nav-mapa:hover { background: #eee; }
+
+        .nav-logo {
+        height: 60px;       /* Altura da barra */
+        width: 60px;        /* Largura igual para ficar redonda */
+        object-fit: cover;  /* Corta a foto para caber */
+        
+        vertical-align: middle; /* Alinha com o texto */
+     }
+
+
+        /* --- SEÇÕES --- */
+        section {
+            padding: 80px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        #capa{
+             background-image: whitesmoke;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #333;
+            padding: 80px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+    
+        }
+            
+        #capa h1 {
+            font-family: 'Eczar', serif;
+            font-weight: 800; /* Extra negrito */
+            font-size: 3.5em;   /* Pode ser bem grande */
+            line-height: 0.9;
+            color: #f77c00;
+            
+            /* Sombra cor de barro/terra para destacar */
+            text-shadow: 4px 4px 0px #062bc2; 
+            
+            margin-bottom: 20px;
+        }
+
+        #metodologia { 
+              background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(Fotos/capa_foto.JPG);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+        }
+
+        h1 { font-family: 'Merriweather', serif; font-size: 3.5em; margin-bottom: 10px; background-color: #f0f0f0; /* Fundo cinza para ajudar a ver o espaçamento */
+            padding: 10px;            /* Aplica 20px de padding em todos os lados */}
+        h2 { font-family: 'Merriweather', serif; font-size: 1.5em; color: rgb(0, 160, 0); margin-bottom: 10px; position: relative; 
+    background-color: lch(0.86% 2.78 19.4 / 0.647); /* Fundo cinza para ajudar a ver o espaçamento */
+            padding: 5px;   border-radius: 12px;            /* Aplica 20px de padding em todos os lados */}
+        
+        h2::after {
+            content: ''; display: block; width: 60px; height: 4px;
+            background: rgb(0, 160, 0); margin: 10px auto;
+        }
+
+        p { max-width: 800px; text-align: justify; font-size: 1.1em; margin-bottom: 20px; }
+
+        .btn-mapa {
+            background-color:rgb(0, 160, 0); color: white; padding: 15px 40px;
+            text-decoration: none; border-radius: 30px; font-size: 1.2em;
+            font-weight: bold; box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
+            transition: transform 0.2s; margin-top: 30px;
+        }
+        .btn-mapa:hover { transform: scale(1.05); background-color: #a0522d; }
+
+        footer {background-color: rgb(0, 160, 0);  color: #000000; text-align: center; align-items: center;
+ padding: 0.5px; }
+
+        /* --- ESTILO DA SEÇÃO DE TEMAS --- */
+        #temas {
+            background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(Fotos/capa_foto.JPG);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+        }
+
+        .container-temas {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+       /* --- ARQUITETURA DA GRADE (GRID) --- */
+        .cards-grid {
+            display: flex; /* Ativa o modo flexível */
+            flex-direction: row; /* Força a direção LINHA (Horizontal) */
+            flex-wrap: wrap; /* Permite quebrar linha SÓ se for celular */
+            justify-content: center; /* Centraliza no meio da tela */
+            gap: 30px; /* Espaço entre os cards */
+            max-width: 1200px; /* Largura máxima da área */
+            margin: 0 auto; /* Centraliza o bloco todo na tela */
+        }
+
+        /* --- O CARTÃO (CARD) --- */
+        .card {
+            background: white;
+            /* AQUI ESTÁ A MUDANÇA: */
+            flex: 1 1 300px; /* Cresce, encolhe, mas tenta ter base de 300px */
+            max-width: 350px; /* Não deixa ficar gigante em telas grandes */
+            min-width: 250px; /* Não deixa ficar muito fino */
+            
+            border-radius: 15px;
+            text-decoration: none;
+            color: #555;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            
+            display: flex;
+            flex-direction: column; /* O conteúdo DENTRO do card é vertical */
+            text-align: center;
+            overflow: hidden;
+            height: 100%; /* Garante que todos tenham a mesma altura visual */
+        }
+
+        /* Efeito Hover */
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Imagem */
+        .card-img {
+            width: 100%;
+            height: 200px; /* Altura fixa da imagem */
+            object-fit: cover;
+        }
+
+        /* Conteúdo do Texto */
+        .card-content {
+            padding: 25px;
+            flex-grow: 1; /* Faz o texto ocupar o espaço restante para alinhar o fundo */
+        }
+
+        .card h3 {
+            margin: 0 0 15px 0;
+            color: #8b4513;
+            font-size: 1.5em;
+            font-family: 'Merriweather', serif;
+        }
+
+        .card p {
+            font-size: 0.95em;
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        #sobre { 
+            background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Fotos/foto_sobre.JPG');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <img src="Fotos/atlas_pr_cortada.jpg" class="nav-logo">
+        <a href="#temas" class="nav-link">Início</a>
+        <a href="#sobre" class="nav-link">O Projeto</a>
+        <a href="#metodologia" class="nav-link">Metodologia</a>
+        <a href="mapa.html" class="btn-nav-mapa">Abrir Mapa</a>
+    </nav>
+
+     <section id="temas">
+        <div class="container-temas">
+            <h2>Explore por Categorias</h2>
+            <p ></p>
+
+<div class="cards-grid">
+                
+                <a href="tema_territorios.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de uma Terra Indígena" class="card-img">
+                       <div class="card-content">
+                        <h3>Anúncios</h3>
+                        <p>Sobre o panorâma indígena recente no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="tema_populacao.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de pessoas indígenas" class="card-img">
+                    <div class="card-content">
+                        <h3>Lutas</h3>
+                        <p>Sobre as principais frentes de lutas indígenas no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="tema_educacao.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de escola ou artesanato" class="card-img">
+                    <div class="card-content">
+                        <h3>Acervo Cultural</h3>
+                        <p>Sobre as diversas manifestações culturais indigenas no Paraná</p>
+                    </div>
+                </a>
+
+            </div> 
+    </section>
+
+    <section id="sobre">
+        <h2>O Que é o Atlas?</h2>
+        <p>Este projeto nasce da necessidade de compreender a distribuição espacial das comunidades indígenas...</p>
+        <p>A ferramenta foi desenvolvida no âmbito acadêmico da UFPR...</p>
+    </section>
+
+    <section id="metodologia">
+        <h2>Como foi feito?</h2>
+        <p>Os dados vetoriais foram obtidos através do portal de dados abertos da FUNAI e do IBGE...</p>
+        <p>A implementação web utiliza a biblioteca Mapbox GL JS...</p>
+        <a href="mapa.html" class="btn-mapa">🗺️ Acessar Mapa Interativo</a>
+    </section>
+
+    <footer>
+        <p>Desenvolvido por @atlasterritoriosindigenas.pr@gmail.com</p>
+    </footer>
+
+    <script>
+        // 1. Seleciona todas as seções e todos os links do menu
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll(".nav-link");
+
+        // 2. Função que roda toda vez que você mexe na barra de rolagem
+        window.onscroll = () => {
+            let current = "";
+
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                // Se a rolagem desceu até 1/3 desta seção...
+                if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            // 3. Remove a classe 'ativo' de todos e adiciona só no certo
+            navLinks.forEach((li) => {
+                li.classList.remove("ativo");
+                if (li.getAttribute("href").includes(current)) {
+                    li.classList.add("ativo");
+                }
+            });
+        };
+    </script>
+
+</body>
+</html>
