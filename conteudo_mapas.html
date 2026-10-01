@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repositório de Mapas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilos/menu.css">
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Open Sans', sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        /* CABEÇALHO DA NAVEGAÇÃO */
+        .navegacao-header { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid rgb(0, 160, 0); padding-bottom: 10px; margin-bottom: 25px; }
+        .btn-voltar { background-color: #e2e8f0; color: #4a5568; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; display: none; }
+        .btn-voltar:hover { background-color: #cbd5e0; color: #1a202c; }
+        .tema-titulo { color: #2c3e50; font-size: 1.5em; margin: 0; font-weight: 700; }
+        .secao-titulo { font-size: 1.1em; color: #718096; margin: 20px 0 10px 0; font-weight: 600; }
+
+        /* GRIDS DE EXIBIÇÃO */
+        .grid-container { display: grid; gap: 25px; margin-bottom: 30px; }
+        .grid-pastas { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+        .grid-mapas { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+        /* CARDS DAS PASTAS (Categorias e Subpastas) */
+        .pasta-card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .pasta-card:hover { border-color: rgb(0, 160, 0); background-color: #f4fbf4; transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,160,0,0.12); }
+        .pasta-icon { font-size: 3.5em; margin-bottom: 12px; line-height: 1; }
+        .pasta-titulo { font-size: 1.15em; font-weight: 700; color: #2d3748; margin: 0; }
+
+        /* CARDS DOS MAPAS (Arquivos) */
+        .mapa-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .mapa-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .mapa-thumb { width: 100%; height: 180px; object-fit: cover; background-color: #edf2f7; border-bottom: 1px solid #edf2f7; }
+        .mapa-info { padding: 18px; display: flex; flex-direction: column; flex-grow: 1; }
+        .mapa-info h3 { margin: 0 0 15px 0; font-size: 1.05em; color: #1a202c; line-height: 1.4; word-break: break-word; flex-grow: 1; }
+        .mapa-acoes { display: flex; gap: 10px; margin-top: auto; }
+
+        /* BOTÕES */
+        .btn { flex: 1; padding: 9px 12px; text-align: center; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.85em; cursor: pointer; border: none; transition: background-color 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-ver { background-color: #e8f5e9; color: rgb(0, 160, 0); border: 1px solid rgb(0, 160, 0); }
+        .btn-ver:hover { background-color: rgb(0, 160, 0); color: #ffffff; }
+        .btn-baixar { background-color: #f87f05; color: #ffffff; }
+        .btn-baixar:hover { background-color: #d96d04; }
+
+        /* JANELA MODAL DE PRÉ-VISUALIZAÇÃO */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; }
+        .modal-content { background-color: #ffffff; width: 90%; max-width: 1100px; height: 85vh; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #edf2f7; }
+        .modal-header h3 { margin: 0; font-size: 1.1em; color: #2d3748; }
+        .close { font-size: 28px; font-weight: bold; color: #a0aec0; cursor: pointer; line-height: 1; }
+        .close:hover { color: #e53e3e; }
+        .modal-body { flex-grow: 1; width: 100%; height: 100%; }
+        .modal-body iframe { width: 100%; height: 100%; border: none; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <script src="js/menu.js"></script>
+    
+<div class="container">
+    
+    <!-- Cabeçalho Dinâmico -->
+    <div class="navegacao-header">
+        <button id="btn-voltar" class="btn-voltar" onclick="voltarNivel()">⬅ Voltar</button>
+        <h2 id="titulo-atual" class="tema-titulo">Repositório de Mapas</h2>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 20px; color: #666;">Carregando arquivos...</div>
+    
+    <!-- Containers Dinâmicos -->
+    <div id="container-pastas" style="display: none;">
+        <h4 class="secao-titulo">Pastas</h4>
+        <div id="grid-pastas" class="grid-container grid-pastas"></div>
+    </div>
+
+    <div id="container-mapas" style="display: none;">
+        <h4 class="secao-titulo">Mapas em PDF</h4>
+        <div id="grid-mapas" class="grid-container grid-mapas"></div>
+    </div>
+
+</div>
+
+<!-- JANELA MODAL PARA VER O PDF -->
+<div id="pdfModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Pré-visualização do Mapa</h3>
+            <span class="close" onclick="fecharPreview()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <iframe id="pdfViewer" src="" title="Visualizador de PDF"></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ROOT_FOLDER_ID = '1Od0tgXosSP_SzUukuRwJHongYcQGpY4_';
+    const API_KEY = 'AIzaSyBK6lkCsjVrRqHiLJ1b2jLiWU-Rp-t-lQc';
+
+    // Histórico de navegação das pastas (igual ao das fotos)
+    let historicoNavegacao = [];
+
+    // Inicia o site abrindo a pasta principal
+    abrirPasta(ROOT_FOLDER_ID, 'Repositório de Mapas');
+
+    // 1. FUNÇÃO PRINCIPAL: ABRIR E LER A PASTA
+    async function abrirPasta(idPasta, nomePasta, ehVoltar = false) {
+        
+        // Atualiza o histórico
+        if (!ehVoltar) {
+            historicoNavegacao.push({ id: idPasta, nome: nomePasta });
+        }
+        atualizarCabecalho();
+
+        // Limpa e prepara a tela
+        document.getElementById('container-pastas').style.display = 'none';
+        document.getElementById('container-mapas').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('loading').innerHTML = 'Carregando arquivos...';
+
+        const gridPastas = document.getElementById('grid-pastas');
+        const gridMapas = document.getElementById('grid-mapas');
+
+        // MUDANÇA AQUI: Agora a query busca PASTAS OU PDFs dentro do diretório atual
+        const query = `'${idPasta}' in parents and (mimeType='application/vnd.google-apps.folder' or mimeType='application/pdf') and trashed=false`;
+        const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,thumbnailLink,webViewLink,webContentLink)&orderBy=folder,name&key=${API_KEY}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.error) {
+                throw new Error(data.error.message || "Erro retornado pela API");
+            }
+
+            document.getElementById('loading').style.display = 'none';
+
+            if (!data.files || data.files.length === 0) {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerHTML = 'Esta pasta está vazia.';
+                gridPastas.innerHTML = '';
+                gridMapas.innerHTML = '';
+                return;
+            }
+
+            let temPastas = false;
+            let temMapas = false;
+            let htmlPastas = '';
+            let htmlMapas = '';
+
+            data.files.forEach(arquivo => {
+                const nomeEscapado = arquivo.name.replace(/'/g, "\\'");
+
+                if (arquivo.mimeType === 'application/vnd.google-apps.folder') {
+                    temPastas = true;
+                    htmlPastas += `
+                        <div class="pasta-card" onclick="abrirPasta('${arquivo.id}', '${nomeEscapado}')">
+                            <div class="pasta-icon">📁</div>
+                            <h3 class="pasta-titulo">${arquivo.name}</h3>
+                        </div>
+                    `;
+                } else if (arquivo.mimeType === 'application/pdf') {
+                    temMapas = true;
+                    // Se não tiver thumbnail gerada pelo Google, usa um placeholder cinza
+                    const imgMiniatura = arquivo.thumbnailLink ? arquivo.thumbnailLink.replace('=s220', '=s800') : 'https://via.placeholder.com/400x200?text=Sem+Capa';
+                    const tituloLimpo = arquivo.name.replace('.pdf', '');
+                    const linkIframePreview = `https://drive.google.com/file/d/${arquivo.id}/preview`;
+
+                    htmlMapas += `
+                        <div class="mapa-card">
+                            <img src="${imgMiniatura}" alt="${tituloLimpo}" class="mapa-thumb">
+                            <div class="mapa-info">
+                                <h3>${tituloLimpo}</h3>
+                                <div class="mapa-acoes">
+                                    <button class="btn btn-ver" onclick="abrirPreview('${linkIframePreview}')"> Visualizar</button>
+                                    <a href="${arquivo.webContentLink}" download class="btn btn-baixar" target="_blank"> Baixar</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Substitui o HTML de uma vez para evitar duplicação de clique
+            gridPastas.innerHTML = htmlPastas;
+            gridMapas.innerHTML = htmlMapas;
+
+            // Mostra apenas os blocos que possuem conteúdo
+            if (temPastas) document.getElementById('container-pastas').style.display = 'block';
+            if (temMapas) document.getElementById('container-mapas').style.display = 'block';
+
+        } catch (error) {
+            console.error("Erro ao carregar o Drive:", error);
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerHTML = 'Erro ao carregar o conteúdo. Verifique as permissões.';
+        }
+    }
+
+    // 2. NAVEGAÇÃO DO CABEÇALHO E BOTÃO VOLTAR
+    function atualizarCabecalho() {
+        const btnVoltar = document.getElementById('btn-voltar');
+        const titulo = document.getElementById('titulo-atual');
+
+        if (historicoNavegacao.length > 1) {
+            btnVoltar.style.display = 'inline-block';
+        } else {
+            btnVoltar.style.display = 'none';
+        }
+
+        const atual = historicoNavegacao[historicoNavegacao.length - 1];
+        if (atual) {
+            titulo.innerText = atual.nome;
+        }
+    }
+
+    function voltarNivel() {
+        if (historicoNavegacao.length > 1) {
+            historicoNavegacao.pop(); // Remove o nível atual
+            const anterior = historicoNavegacao[historicoNavegacao.length - 1];
+            abrirPasta(anterior.id, anterior.nome, true);
+        }
+    }
+
+    // 3. CONTROLE DO MODAL DE PRÉ-VISUALIZAÇÃO (Iframe do PDF)
+    function abrirPreview(urlPdf) {
+        const modal = document.getElementById("pdfModal");
+        document.getElementById("pdfViewer").src = urlPdf;
+        modal.style.display = "flex"; 
+        document.body.style.overflow = "hidden"; // Desativa rolagem do fundo
+    }
+
+    function fecharPreview() {
+        const modal = document.getElementById("pdfModal");
+        modal.style.display = "none";
+        document.getElementById("pdfViewer").src = "";
+        document.body.style.overflow = "auto"; // Reativa a rolagem
+    }
+
+    // Fechar ao clicar no fundo escuro ou ao apertar ESC
+    window.onclick = function(event) {
+        const modal = document.getElementById("pdfModal");
+        if (event.target === modal) {
+            fecharPreview();
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            fecharPreview();
+        }
+    });
+</script>
+
+</body>
+</html>

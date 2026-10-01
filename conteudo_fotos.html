@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acervo de Fotos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilos/menu.css">
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Open Sans', sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        /* CABEÇALHO DA NAVEGAÇÃO */
+        .navegacao-header { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid rgb(0, 160, 0); padding-bottom: 10px; margin-bottom: 25px; }
+        .btn-voltar { background-color: #e2e8f0; color: #4a5568; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; display: none; }
+        .btn-voltar:hover { background-color: #cbd5e0; color: #1a202c; }
+        .tema-titulo { color: #2c3e50; font-size: 1.5em; margin: 0; font-weight: 700; }
+
+        /* GRIDS GERAIS */
+        .secao-titulo { font-size: 1.1em; color: #718096; margin: 20px 0 10px 0; font-weight: 600; }
+        .grid { display: grid; gap: 20px; margin-bottom: 30px; }
+        .grid-pastas { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .grid-fotos { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+
+        /* CARDS DAS PASTAS */
+        .pasta-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .pasta-card:hover { border-color: rgb(0, 160, 0); background-color: #f4fbf4; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,160,0,0.1); }
+        .pasta-icon { font-size: 2.2em; line-height: 1; }
+        .pasta-titulo { font-size: 1em; font-weight: 700; color: #2d3748; margin: 0; text-align: left; }
+
+        /* CARDS DAS FOTOS */
+        .foto-card { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; aspect-ratio: 1 / 1; background-color: #edf2f7; box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
+        .foto-thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; display: block; }
+        
+        /* OVERLAY E BOTÃO DE DOWNLOAD DIRETO */
+        .foto-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 45%); opacity: 0; transition: opacity 0.3s ease; display: flex; align-items: flex-end; justify-content: space-between; padding: 15px; }
+        .foto-card:hover .foto-overlay { opacity: 1; }
+        .foto-card:hover .foto-thumb { transform: scale(1.05); }
+        
+        .foto-info { flex-grow: 1; padding-right: 10px; }
+        .foto-titulo { color: #fff; margin: 0; font-size: 0.95em; font-weight: 600; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .btn-baixar-card { background-color: #f87f05; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 1.2em; flex-shrink: 0; transition: background-color 0.2s, transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .btn-baixar-card:hover { background-color: #d96d04; transform: scale(1.1); }
+
+        /* LIGHTBOX (TELA CHEIA) */
+        .lightbox { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .lightbox-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
+        .lightbox-titulo { color: white; margin: 0; font-size: 1.2em; font-weight: 600; }
+        .lightbox-acoes { display: flex; gap: 20px; align-items: center; }
+        .btn-download-full { background-color: #f87f05; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
+        .btn-download-full:hover { background-color: #d96d04; }
+        .close-lightbox { color: white; font-size: 40px; cursor: pointer; line-height: 1; font-weight: bold; transition: color 0.2s; }
+        .close-lightbox:hover { color: #e53e3e; }
+        .lightbox-img { max-width: 90%; max-height: 80vh; object-fit: contain; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <script src="js/menu.js"></script>
+
+<div class="container">
+    
+    <!-- Cabeçalho Dinâmico -->
+    <div class="navegacao-header">
+        <button id="btn-voltar" class="btn-voltar" onclick="voltarNivel()">⬅ Voltar</button>
+        <h2 id="titulo-atual" class="tema-titulo">Galeria de Fotos</h2>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 20px; color: #666;">Carregando arquivos...</div>
+    
+    <!-- Containers Dinâmicos -->
+    <div id="container-pastas" style="display: none;">
+        <h4 class="secao-titulo">Pastas</h4>
+        <div id="grid-pastas" class="grid grid-pastas"></div>
+    </div>
+
+    <div id="container-fotos" style="display: none;">
+        <h4 class="secao-titulo">Fotos</h4>
+        <div id="grid-fotos" class="grid grid-fotos"></div>
+    </div>
+
+</div>
+
+<!-- LIGHTBOX -->
+<div id="fotoModal" class="lightbox">
+    <div class="lightbox-header">
+        <h3 class="lightbox-titulo" id="modal-titulo">Título da Foto</h3>
+        <div class="lightbox-acoes">
+            <a href="#" id="modal-download" class="btn-download-full" target="_blank" download>⬇ Baixar Alta Resolução</a>
+            <span class="close-lightbox" onclick="fecharLightbox()">&times;</span>
+        </div>
+    </div>
+    <img id="modal-img" class="lightbox-img" src="" alt="Visualização ampliada">
+</div>
+
+<script>
+    const ROOT_FOLDER_ID = '1pGYvuuChZXUwFqGJAI-ddzg4QnsVY3I1';
+    const API_KEY = 'AIzaSyBK6lkCsjVrRqHiLJ1b2jLiWU-Rp-t-lQc';
+
+    // Histórico de navegação das pastas
+    let historicoNavegacao = [];
+
+    // Inicia a galeria
+    abrirPasta(ROOT_FOLDER_ID, 'Galeria de Fotos');
+
+    // 1. FUNÇÃO PRINCIPAL: ABRIR E LER A PASTA
+    async function abrirPasta(idPasta, nomePasta, ehVoltar = false) {
+        
+        // Atualiza o histórico
+        if (!ehVoltar) {
+            historicoNavegacao.push({ id: idPasta, nome: nomePasta });
+        }
+        atualizarCabecalho();
+
+        // Limpa e prepara a tela
+        document.getElementById('container-pastas').style.display = 'none';
+        document.getElementById('container-fotos').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('loading').innerHTML = 'Carregando arquivos...';
+
+        const gridPastas = document.getElementById('grid-pastas');
+        const gridFotos = document.getElementById('grid-fotos');
+        gridPastas.innerHTML = '';
+        gridFotos.innerHTML = '';
+
+        const query = `'${idPasta}' in parents and (mimeType='application/vnd.google-apps.folder' or mimeType contains 'image/') and trashed=false`;
+        const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name,mimeType,thumbnailLink,webContentLink)&orderBy=folder,name&key=${API_KEY}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (data.error) {
+                throw new Error(data.error.message || "Erro retornado pela API");
+            }
+
+            document.getElementById('loading').style.display = 'none';
+
+            if (!data.files || data.files.length === 0) {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerHTML = 'Esta pasta está vazia.';
+                return;
+            }
+
+            let temPastas = false;
+            let temFotos = false;
+            let htmlPastas = '';
+            let htmlFotos = '';
+
+            data.files.forEach(arquivo => {
+                // Escapa aspas para não quebrar os eventos de clique
+                const nomeEscapado = arquivo.name.replace(/'/g, "\\'");
+
+                if (arquivo.mimeType === 'application/vnd.google-apps.folder') {
+                    temPastas = true;
+                    htmlPastas += `
+                        <div class="pasta-card" onclick="abrirPasta('${arquivo.id}', '${nomeEscapado}')">
+                            <div class="pasta-icon">📁</div>
+                            <h3 class="pasta-titulo">${arquivo.name}</h3>
+                        </div>
+                    `;
+                } else if (arquivo.mimeType.includes('image/')) {
+                    temFotos = true;
+                    const tituloLimpo = arquivo.name.replace(/\.[^/.]+$/, ""); 
+                    const tituloEscapado = tituloLimpo.replace(/'/g, "\\'");
+
+                    let imgThumb = "";
+                    let imgFull = "";
+
+                    if (arquivo.thumbnailLink) {
+                        const urlBase = arquivo.thumbnailLink.split('=')[0];
+                        imgThumb = urlBase + '=s600-c';
+                        imgFull = urlBase + '=s2048';
+                    } else {
+                        imgThumb = `https://drive.google.com/thumbnail?id=${arquivo.id}&sz=w600-h600`;
+                        imgFull = `https://drive.google.com/uc?id=${arquivo.id}`;
+                    }
+
+                    const linkDownload = arquivo.webContentLink || imgFull;
+
+                    htmlFotos += `
+                        <div class="foto-card" onclick="abrirLightbox('${imgFull}', '${tituloEscapado}', '${linkDownload}')">
+                            <img src="${imgThumb}" alt="${tituloLimpo}" class="foto-thumb" loading="lazy">
+                            <div class="foto-overlay">
+                                <div class="foto-info">
+                                    <h3 class="foto-titulo">${tituloLimpo}</h3>
+                                </div>
+                                <a href="${linkDownload}" class="btn-baixar-card" download title="Baixar Original" onclick="event.stopPropagation()">⬇</a>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            gridPastas.innerHTML = htmlPastas;
+            gridFotos.innerHTML = htmlFotos;
+
+            if (temPastas) document.getElementById('container-pastas').style.display = 'block';
+            if (temFotos) document.getElementById('container-fotos').style.display = 'block';
+
+        } catch (error) {
+            console.error("Erro ao carregar o Drive:", error);
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerHTML = 'Erro ao carregar o conteúdo. Verifique se as permissões da pasta estão públicas.';
+        }
+    }
+
+    // 2. NAVEGAÇÃO DO CABEÇALHO E BOTÃO VOLTAR
+    function atualizarCabecalho() {
+        const btnVoltar = document.getElementById('btn-voltar');
+        const titulo = document.getElementById('titulo-atual');
+
+        if (historicoNavegacao.length > 1) {
+            btnVoltar.style.display = 'inline-block';
+        } else {
+            btnVoltar.style.display = 'none';
+        }
+
+        const atual = historicoNavegacao[historicoNavegacao.length - 1];
+        if (atual) {
+            titulo.innerText = atual.nome;
+        }
+    }
+
+    function voltarNivel() {
+        if (historicoNavegacao.length > 1) {
+            historicoNavegacao.pop(); // Remove o nível atual
+            const anterior = historicoNavegacao[historicoNavegacao.length - 1];
+            abrirPasta(anterior.id, anterior.nome, true);
+        }
+    }
+
+    // 3. CONTROLE DA LIGHTBOX (MODAL)
+    function abrirLightbox(imgUrl, titulo, downloadUrl) {
+        document.getElementById('modal-img').src = imgUrl;
+        document.getElementById('modal-titulo').innerText = titulo;
+        document.getElementById('modal-download').href = downloadUrl;
+        document.getElementById('fotoModal').style.display = 'flex';
+    }
+
+    function fecharLightbox() {
+        document.getElementById('fotoModal').style.display = 'none';
+        document.getElementById('modal-img').src = '';
+    }
+
+    // Fechar lightbox ao clicar fora ou apertar ESC
+    window.onclick = function(event) {
+        const modal = document.getElementById('fotoModal');
+        if (event.target === modal) {
+            fecharLightbox();
+        }
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            fecharLightbox();
+        }
+    });
+</script>
+
+</body>
+</html>

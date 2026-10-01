@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Atlas Indígena PR | Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&family=Eczar:wght@800&family=Ruslan+Display&display=swap" rel="stylesheet">  
+    
+    <!-- CSS DO LEAFLET (Para a janela de mapa funcionar) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="estilos/menu.css">
+    <style>
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            margin: 0; padding: 0; 
+            font-family: 'Open Sans', sans-serif; 
+            color: #333; line-height: 1.6;
+        }
+
+        /* --- PRELOAD (Carrega as imagens antes para evitar piscar na transição) --- */
+        #preload-imagens {
+            position: absolute;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        /* --- SEÇÕES BASE --- */
+        section {
+            padding: 100px 20px 80px; /* Mais espaço no topo por conta do menu */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* --- SEÇÃO CAPA (COM MAPA) --- */
+       #capa {
+        /* Mudei aqui para bater com a primeira foto da sua lista do JS */
+        background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Fotos/capa 1.JPG');
+        flex-direction: row;
+        flex-wrap: wrap;
+        background-size: cover;
+        background-position: center;
+        transition: background-image 1.5s ease-in-out; 
+        background-color: #000; /* Evita fundo branco antes de carregar */
+        }
+        
+        .capa-texto {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+        }
+            
+        .capa-texto h1 {
+            font-family: 'Eczar', serif;
+            font-weight: 800;
+            font-size: 3.5em;
+            line-height: 1.1;
+            color: #f77c00;
+            text-shadow: 4px 4px 0px #062bc2; 
+            margin-bottom: 20px;
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .capa-texto p {
+            font-size: 1.2em;
+            color: #444;
+        }
+
+        /* --- JANELA DO MAPA PREVIEW --- */
+        .capa-mapa-container {
+            flex: 1;
+            min-width:600px;
+            max-width: 600px;
+            position: relative;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border: 4px solid  rgb(0, 160, 0);
+            opacity: 0.92;
+            
+        }
+
+        #preview-map {
+            width: 100%;
+            height: 100%;
+            /* Evita que o usuário role a página sem querer ao passar o mouse */
+            pointer-events: none;
+             
+        }
+
+        /* Overlay clicável por cima do mapa */
+        .mapa-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .mapa-overlay span {
+            background: #f87f05;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(248, 127, 5, 0.5);
+        }
+
+        .capa-mapa-container:hover .mapa-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+
+        .capa-mapa-container:hover .mapa-overlay span {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* --- DEMAIS SEÇÕES --- */
+        h2 { 
+            font-family: 'Merriweather', serif; 
+            font-size: 2em; 
+            color: rgb(0, 160, 0); 
+            margin-bottom: 20px; 
+            position: relative; 
+            background-color: rgba(0, 160, 0, 0.1); 
+            padding: 10px 20px;   
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        h2::after {
+            content: ''; display: block; width: 60px; height: 4px;
+            background: rgb(0, 160, 0); margin: 10px auto;
+        }
+
+        p { max-width: 800px;  font-size: 1.1em; margin-bottom: 20px; }
+
+        .btn-mapa {
+            background-color:rgb(0, 160, 0); color: white; padding: 15px 40px;
+            text-decoration: none; border-radius: 30px; font-size: 1.2em;
+            font-weight: bold; box-shadow: 0 4px 15px rgba(0, 160, 0, 0.4);
+            transition: transform 0.2s; margin-top: 30px; display: inline-block;
+        }
+        .btn-mapa:hover { transform: scale(1.05); background-color: #008000; }
+
+        /* Restante do CSS original mantido igual */
+        #metodologia, #conteudos, #sobre {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            text-align: center;
+        }
+
+        #conteudos { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Fotos/capa_foto.JPG'); }
+        #sobre { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Fotos/foto_sobre.JPG'); }
+        #metodologia { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Fotos/capa_foto.JPG'); }
+
+        .container-temas { max-width: 1200px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        .cards-grid {
+            display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center;
+            gap: 30px; max-width: 1200px; height: 100%; margin: 0 auto;
+        }
+
+        .card {
+            background: white; flex: 1 1 300px; height: 300px; max-width: 300px; min-width: 250px;
+            border-radius: 15px; text-decoration: none; color: #555;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;
+            display: flex; flex-direction: column; text-align: center; overflow: hidden; height: 300px;
+        }
+
+        .card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .card-img { width: 100%; height: 180px; object-fit: cover; }
+        .card-content { padding: 15px; flex-grow: 1; }
+        .card h3 { margin: 0 0 8px 0; color: #8b4513; font-size: 1.5em; font-family: 'Merriweather', serif; }
+        .card p { font-size: 0.95em; color: #666; margin: 0; line-height: 1.5; text-align: center; }
+
+        footer { background-color: rgb(0, 160, 0); color: white; text-align: center; padding: 10px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    
+    <!-- ESCONDE AS IMAGENS AQUI PARA ELAS CARREGAREM ANTES E EVITAR PISCAR -->
+    <div id="preload-imagens">
+        <img src="Fotos/capa 1.JPG" alt="preload">
+        <img src="Fotos/capa 2.JPG" alt="preload">
+        <img src="Fotos/capa 3.JPG" alt="preload">
+        <img src="Fotos/capa 4.JPG" alt="preload">
+    </div>
+
+    <!-- 1. NOVA SEÇÃO DE ABERTURA COM O MAPA -->
+    <section id="capa">
+        <div class="capa-texto">
+            <h1>Atlas Digital dos Territórios Indígenas no Paraná</h1>
+            <a href="mapa.html" class="btn-mapa">Acessar Atlas Completo</a>
+        </div>
+        
+        <div class="capa-mapa-container">
+            <div id="preview-map"></div>
+            <!-- O overlay age como um botão gigante em cima do mapa -->
+            <a href="mapa.html" class="mapa-overlay">
+                <span><i class="fa-solid fa-map-location-dot"></i> Abrir Mapa Interativo</span>
+            </a>
+        </div>
+    </section>
+
+    <section id="conteudos">
+        <div class="container-temas">
+            <h2 style="color: white; background: rgba(0,0,0,0.2); border: none;">Explore por Categorias</h2>
+            <div class="cards-grid">
+                
+                <a href="conteudo_mapas.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de uma Terra Indígena" class="card-img">
+                    <div class="card-content">
+                        <h3>Mapas</h3>
+                        <p>Sobre o panorâma indígena recente no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="conteudo_analises.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de escola ou artesanato" class="card-img">
+                    <div class="card-content">
+                        <h3>Analises Territoriais</h3>
+                        <p>Sobre as diversas manifestações culturais indígenas no Paraná</p>
+                    </div>
+                </a>
+
+                 <a href="conteudo_boletins.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de uma Terra Indígena" class="card-img">
+                    <div class="card-content">
+                        <h3>Boletins Informativos</h3>
+                        <p>Sobre o panorâma indígena recente no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="conteudo_fotos.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de pessoas indígenas" class="card-img">
+                    <div class="card-content">
+                        <h3>Fotos</h3>
+                        <p>Sobre as principais frentes de lutas indígenas no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="https://www.instagram.com/observ.questao.agraria.pr?stkn=MWI3Nnc1OGxtb2gzMQ==" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de pessoas indígenas" class="card-img">
+                    <div class="card-content">
+                        <h3>Posts</h3>
+                        <p>Sobre as principais frentes de lutas indígenas no Paraná</p>
+                    </div>
+                </a>
+
+                <a href="conteudo_outros.html" class="card">
+                    <img src="Fotos/Design sem nome.jpg" alt="Foto de escola ou artesanato" class="card-img">
+                    <div class="card-content">
+                        <h3>Outros</h3>
+                        <p>Sobre as diversas manifestações culturais indígenas no Paraná</p>
+                    </div>
+                </a>
+
+            </div> 
+        </div>
+    </section>
+
+     <section id="insta-section">
+<div id="JFWebsiteWidget-01a0edca7e9070008dc336e0323d79c23f4d"></div>
+<script src="https://www.jotform.com/website-widgets/embed/01a0edca7e9070008dc336e0323d79c23f4d" defer></script>
+    </section>
+
+    <section id="sobre">
+        <h2 style="color: white; background: rgba(0,0,0,0.2);">O Que é o Atlas?</h2>
+        <p style="color: white;">Este projeto nasce da necessidade de compreender a distribuição espacial das comunidades indígenas...</p>
+        <p style="color: white;">A ferramenta foi desenvolvida no âmbito acadêmico da UFPR...</p>
+    </section>
+
+    <footer>
+      Desenvolvido por @atlasterritoriosindigenas.pr@gmail.com
+    </footer>
+
+    <!-- SCRIPT DO LEAFLET -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/menu.js"></script>
+
+    <script>
+        // ----------------------------------------------------
+        // 2. LÓGICA DA JANELA DE PRÉ-VISUALIZAÇÃO DO MAPA
+        // ----------------------------------------------------
+        
+        // Inicia o mapa centrado no PR com zoom travado
+        const previewMap = L.map('preview-map', {
+            zoomControl: false, 
+            dragging: false, 
+            scrollWheelZoom: false, 
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false
+        }).setView([-24.5, -51.3], 7.2); // Ajuste fino no Paraná
+
+        // Mapa tradicional do OpenStreetMap
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(previewMap);
+
+        // ⚠️ ATENÇÃO: Carregando a camada (GeoJSON)
+        // Troque 'SEU_ARQUIVO.geojson' pelo caminho real do seu arquivo das Terras Indígenas
+        const urlGeoJSON = 'data/terras.json'; 
+
+        fetch(urlGeoJSON)
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#f87f05', // Cor da borda
+                        weight: 1.5,
+                        fillColor: '#d2691e', // Cor do preenchimento
+                        fillOpacity: 0.6
+                    }
+                }).addTo(previewMap);
+            })
+            .catch(error => {
+                console.log("Aviso: O GeoJSON não carregou porque o caminho ainda não foi configurado.", error);
+            });
+
+            // --- LÓGICA DAS FOTOS DE FUNDO ALTERNÁVEIS DA CAPA ---
+                const imagensFundo = [
+                    "url('Fotos/capa 1.JPG')",
+                    "url('Fotos/capa 2.JPG')", 
+                    "url('Fotos/capa 3.JPG')",
+                    "url('Fotos/capa 4.JPG')"
+                ];
+                let indexFundo = 0;
+                const secaoCapa = document.getElementById('capa');
+
+                // Troca a imagem a cada 4 segundos (4000 milissegundos)
+                setInterval(() => {
+                    indexFundo = (indexFundo + 1) % imagensFundo.length;
+                    secaoCapa.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), ${imagensFundo[indexFundo]}`;
+                }, 4000);
+
+    </script>
+</body>
+</html>

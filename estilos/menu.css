@@ -1,0 +1,61 @@
+/* =====================================================================
+   MENU PRINCIPAL — estilos usados pelo menu.js em todas as páginas
+   (o visual é o mesmo que estava no index.html)
+   ===================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
+#menu-principal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 12px 0;
+    background-color: rgba(0, 160, 0, 0.678);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-align: center;
+    z-index: 2000; /* acima do mapa */
+    transition: 0.3s;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+#menu-principal a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    margin: 0 20px;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: 0.3s;
+    padding-bottom: 5px;
+    border-bottom: 2px solid transparent;
+}
+
+#menu-principal a:hover { color: white; }
+
+#menu-principal a.ativo {
+    color: #ffd700;
+    border-bottom: 2px solid #ffd700;
+    opacity: 1;
+}
+
+#menu-principal .btn-nav-mapa {
+    background: white;
+    color: #f87f05 !important;
+    padding: 5px 15px;
+    border-radius: 15px;
+    opacity: 1 !important;
+    border-bottom: none !important;
+}
+#menu-principal .btn-nav-mapa:hover { background: #eee; }
+
+#menu-principal .nav-logo {
+    display: inline-block;
+    height: 60px;
+    width: 60px;
+    object-fit: cover;
+    vertical-align: middle;
+    border-radius: 50%;
+}
